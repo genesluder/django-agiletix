@@ -191,7 +191,7 @@ class Cart(object):
             if response.error.code == 1034:
                 raise InvalidPromoException
             else:
-                raise AgileException(code=response.error.code)
+                raise AgileException(code=response.error.code, message=response.error.message)
 
     def get_transfer_url(self):
         response = api.order_transfer(self.order.order_id, self.order.transaction_id)
