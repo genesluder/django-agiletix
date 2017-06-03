@@ -78,8 +78,9 @@ class Cart(object):
                 response = api.order_start(buyer_type_id=SETTINGS['AGILE_BUYER_TYPE_STANDARD_ID'] , customer_id=customer.customer_id)
 
             if not response.success:
-                if response.error.code == AgileError.MemberNotValid:
-                    pass # TODO: Better handling here
+                if response.error.code == AgileError.MemberRenewalRequired:
+                    raise AgileException(code=response.error.code, message=response.error.message)
+                # TODO: Handle others
 
         if not customer or (response and not response.success):
             response = api.order_start(buyer_type_id=SETTINGS['AGILE_BUYER_TYPE_STANDARD_ID'])
