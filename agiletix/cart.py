@@ -1,6 +1,6 @@
 
 import logging
-logger = logging.getLogger('agile')
+logger = logging.getLogger('hollywood')
 
 import json
 
@@ -44,15 +44,15 @@ def get_cart_for_request(request):
     return None
 
 
-def get_or_create_cart_for_request(request):
+def get_or_create_cart_for_request(request, force_non_member=False):
     """
     Try to retrieve cart from the current session. If none found, create one
 
     """
     cart = get_cart_for_request(request)
-    if not cart:
+    if not cart or (force_non_member and cart and cart.is_member):
         cart = Cart(request)
-        cart.start_order()
+        cart.start_order(force_non_member=force_non_member)
     return cart
 
 
@@ -61,10 +61,11 @@ class Cart(object):
     def __init__(self, request, order=None):
         self._order = None
         self.request = request
+        self.is_member = False
         if order:
             self.order = order
 
-    def start_order(self):
+    def start_order(self, force_non_member=False):
         customer = None
         response = None    
 
@@ -72,8 +73,10 @@ class Cart(object):
             customer = self.request.user
 
         if customer:
-            if customer.member_id:
+            if customer.member_id and not force_non_member:
                 response = api.order_start(buyer_type_id=SETTINGS['AGILE_BUYER_TYPE_STANDARD_ID'] , customer_id=customer.customer_id, member_id=customer.member_id)
+                if response.success:
+                    self.is_member = True
             else:
                 response = api.order_start(buyer_type_id=SETTINGS['AGILE_BUYER_TYPE_STANDARD_ID'] , customer_id=customer.customer_id)
 
