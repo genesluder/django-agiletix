@@ -1,6 +1,6 @@
 
 import logging
-logger = logging.getLogger('hollywood')
+logger = logging.getLogger('agiletix')
 
 import json
 
@@ -65,7 +65,7 @@ class Cart(object):
 
         self.is_member = False
 
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             customer = request.user
             if customer.member_id:
                 self.is_member = True
@@ -77,7 +77,7 @@ class Cart(object):
         customer = None
         response = None    
 
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             customer = self.request.user
 
         if customer:
@@ -162,7 +162,7 @@ class Cart(object):
     @property
     def cart_customer_matches_current(self):
         customer = None
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             customer = self.request.user
         if customer and customer.customer_id and self.order.customer_id and (int(self.order.customer_id) != int(customer.customer_id)):
             return False
