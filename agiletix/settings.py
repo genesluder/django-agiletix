@@ -8,7 +8,8 @@ required_settings = [
     'AGILE_APP_KEY',
     'AGILE_USER_KEY',
     'AGILE_CORP_ORG_ID',
-    'AGILE_BUYER_TYPE_STANDARD_ID'
+    'AGILE_BUYER_TYPE_STANDARD_ID',
+    'AGILE_USE_MEMBERSHIP_ID',
 ]
 
 for key in required_settings:

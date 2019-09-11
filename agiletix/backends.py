@@ -48,7 +48,13 @@ class AgileBackend(object):
 
             if len(agile_customer.members) > 0:
                 # For now, we only support a single membership program type
-                member = agile_customer.members[0]
+                # but allow use of particular membership type
+                member = None
+                for m in agile_customer.members:
+                    if m.membership_id == SETTINGS['AGILE_USE_MEMBERSHIP_ID']:
+                        member = m
+                if not member:
+                    member = agile_customer.members[0]
             
             try:
                 user = User.objects.get(customer_id=agile_customer.customer_id)
