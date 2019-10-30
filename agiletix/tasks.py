@@ -1,14 +1,13 @@
-
 import logging
 logger = logging.getLogger('agiletix')
 
 from contextlib import contextmanager
 
+from agiletix.sync_service import sync_events
 from celery import task
 from celery.five import monotonic
-from django.core.cache import cache
 
-from agiletix.sync_service import sync_events
+from django.core.cache import cache
 
 
 LOCK_EXPIRE = 60 * 2  # Lock expires in 2 minutes

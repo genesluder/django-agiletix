@@ -1,5 +1,6 @@
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 AGILE_SETTINGS = getattr(settings, 'AGILE_SETTINGS', {})
 
