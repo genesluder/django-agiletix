@@ -15,7 +15,7 @@ required_settings = [
 
 for key in required_settings:
     if not key in AGILE_SETTINGS.keys():
-        raise ImproperlyConfigured('{0} is required in AGILE_SETTINGS'.format())
+        raise ImproperlyConfigured('{0} is required in AGILE_SETTINGS'.format(key))
 
 AGILE_SETTINGS.setdefault('AGILE_RESPONSE_FORMAT', 'json')
 AGILE_SETTINGS.setdefault('AGILE_DATE_FORMAT', '%Y-%m-%dT%H:%M:%S')
