@@ -1,6 +1,5 @@
 
-import logging
-logger = logging.getLogger('agiletix')
+
 
 import json
 
@@ -10,9 +9,9 @@ from agiletixapi import AgileError, AgileSalesAPI
 from agiletixapi.exceptions import AgileException, InvalidPromoException
 from agiletixapi.models import Order
 from agiletixapi.utils import datestring_to_ms_datestring
-
+from agiletix.logging import get_logger
+logger = get_logger('lib')
 from agiletix.settings import AGILE_SETTINGS as SETTINGS
-
 
 SESSION_CART_DATA = "SESSION_CART_DATA"
 SESSION_EVENT_PRICE_CACHE_KEY = "SESSION_EVENT_PRICE_CACHE_KEY"
@@ -49,12 +48,32 @@ def get_or_create_cart_for_request(request, force_non_member=False):
     Try to retrieve cart from the current session. If none found, create one
 
     """
+    cart = None
+    try:
+        cart = get_cart_for_request(request)
+        if not cart or (force_non_member and cart and cart.is_member):
+            cart = Cart(request)
+            cart.start_order(force_non_member=force_non_member)
+    except AgileException as e:
+        # TODO: Yeha
+        #logger.warning(__name__, "AgileException -> {}".format(e))
+        if e.code == 1024:
+            cart = get_or_create_cart_for_request(request, force_non_member=True)
+        #cart_error = e.code
 
-    cart = get_cart_for_request(request)
-    if not cart or (force_non_member and cart and cart.is_member):
-        cart = Cart(request)
-        cart.start_order(force_non_member=force_non_member)
     return cart
+
+
+    def get_cart(self, request):
+        cart_error = None
+        cart = None
+
+        if not cart:
+            logger.warning(__name__, "Couldn't load cart")
+            cart_error = -1
+        return cart, cart_error
+
+
 
 
 class Cart(object):
@@ -95,6 +114,7 @@ class Cart(object):
             response = api.order_start(buyer_type_id=SETTINGS['AGILE_BUYER_TYPE_STANDARD_ID'])
         
         if response and response.success:
+            logger.debug("Order started", response=response.data)
             order = Order(response.data)
         else:
             order = None
@@ -112,6 +132,7 @@ class Cart(object):
                 pass # TODO: Better handling here
                 
         if json_object:
+            logger.debug("Order loaded", order_json=json_object)
             # Need to convert datetimes back to MS Json.NET before passing to Order object
             # CloseDateTime, ExpirationDateTime, OpenDateTime
             agile_json_object = {}
@@ -122,6 +143,7 @@ class Cart(object):
                     agile_json_object[key] = value
 
             order = Order(agile_json_object)
+        
         return order 
 
     @property
@@ -175,16 +197,32 @@ class Cart(object):
 
         """
         ticket_types = ",".join(tickets.keys()) 
-        quantities = ",".join([repr(tickets[t]) for t in tickets.keys()])
-        self.add_ticket(agile_event_org_id, agile_event_id, tier_id, ticket_types, quantities, promo_codes)
+        quantities = ",".join([str(tickets[t]) for t in tickets.keys()])
+        self.add_ticket(
+            agile_event_org_id=agile_event_org_id, 
+            agile_event_id=agile_event_id, 
+            tier_id=tier_id, 
+            ticket_types=ticket_types, 
+            quantities=quantities, 
+            promo_codes=promo_codes
+        )
 
     def add_ticket(self, agile_event_org_id, agile_event_id, tier_id, ticket_types, quantities, promo_codes=None):
-
         order = self.order
 
-        promo_code_string = None
         if promo_codes:
-            promo_code_string = ",".join(promo_codes)
+            promo_codes = ",".join(promo_codes)
+
+        logger.debug("Adding ticket payload to cart",            
+            order_id=order.order_id, 
+            transaction_id=order.transaction_id, 
+            agile_event_org_id=agile_event_org_id, 
+            agile_event_id=agile_event_id, 
+            tier_id=tier_id,
+            ticket_types=ticket_types, 
+            quantities=quantities,
+            promo_codes=promo_codes
+        )
 
         response = api.tickets_add(
             order.order_id, 
@@ -194,9 +232,9 @@ class Cart(object):
             tier_id,
             ticket_types, 
             quantities,
-            promo_codes=promo_code_string
+            promo_codes=promo_codes
         )
-
+        logger.debug("Adding ticket response", response=response.data) 
         if not response.success:
             if response.error.code == 1034:
                 raise InvalidPromoException
