@@ -28,6 +28,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Starting agile sync...")
         start_date = timezone.localtime(timezone.now())
-        end_date = start_date + datetime.timedelta(days=90)
+        end_date = start_date + datetime.timedelta(days=180)
         agile_sync_task(start_date, end_date)
         logger.info("Agile sync complete.")
