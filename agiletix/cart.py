@@ -50,15 +50,11 @@ class Cart(object):
     customer = None
     request = None
 
-    def __init__(self, request, force_non_member=False, order=None):
-        self._order = None
+    def __init__(self, request, force_non_member=False):
         self.request = request
 
         if request.user.is_authenticated and not force_non_member:
             self.customer = request.user
-
-        if order:
-            self.order = order
 
     def start_order(self):
         customer = self.customer
@@ -84,7 +80,8 @@ class Cart(object):
         else:
             order = None
 
-        self.order = order
+        self.request.session[SESSION_CART_DATA] = json.dumps(order.to_json())
+        return order
 
     def load_order(self):
         order = None
