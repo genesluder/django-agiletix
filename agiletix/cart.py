@@ -56,6 +56,10 @@ class Cart(object):
         if request.user.is_authenticated and not force_non_member:
             self.customer = request.user
 
+    @property
+    def is_member(self):
+        return self.customer and self.customer.member_id
+
     def start_order(self):
         customer = self.customer
         response = None    
